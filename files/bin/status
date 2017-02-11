@@ -15,19 +15,19 @@ done
 # Read each file in /usr/local/status/results
 for file in $(ls /usr/local/status/results) ; do 
     R=$(cat /usr/local/status/results/$file)
-    if [[ $STATUS_DEBUG -eq 1 ]]; then
+    if (( $STATUS_DEBUG -eq 1 )); then
         echo "[DEBUG] $R - ${file}"
     fi
 
     # Check last change date for this file
     NOW=$(date +%s)
     D=$(stat --printf='%Y' /usr/local/status/results/$file)
-    if [[ $(expr $NOW - $D) > 3600 ]] ; then
+    if (( $(expr $NOW - $D) > 3600 )) ; then
         # File has not been changed since 1H
         # Probe is not working anymore
         STATUS_GLOBAL=$STATUS_EXPIRED
         STATUS_STRING="$STATUS_STRING ${R}-${file}"
-        if [[ $STATUS_DEBUG -eq 1 ]]; then
+        if (( $STATUS_DEBUG == 1 )); then
             echo "[ERROR] ${file} has not been updated last hour!"
         fi
         continue
@@ -35,25 +35,25 @@ for file in $(ls /usr/local/status/results) ; do
 
     if [[ ! $R =~ ^-?[0-9]+$ ]]; then
         # Discarding this result as it is not an integer
-        if [[ $STATUS_DEBUG -eq 1 ]]; then
+        if (( $STATUS_DEBUG -eq 1 )); then
             echo "[ERROR] ${file} does not contain correct integer!"
         fi
         continue
     fi
 
     # Build GLOBAL status
-    if [[ $R > $STATUS_GLOBAL ]]; then
+    if (( $R > $STATUS_GLOBAL )); then
         STATUS_GLOBAL=$R
     fi
 
     # Collect all non 200 status
-    if [[ $R -ne 200 ]] ; then
+    if (( $R != 200 )) ; then
         STATUS_STRING="$STATUS_STRING ${R}-${file}"
     fi
 done
 
 # Final string
-if [[ $STATUS_GLOBAL -eq 200 ]]; then
+if (( $STATUS_GLOBAL == 200 )); then
     STATUS_GLOBAL="$STATUS_GLOBAL OK"
 else
     STATUS_GLOBAL="$STATUS_GLOBAL ERROR"

@@ -44,7 +44,7 @@ if [[ ! -d $STATUS_LOGDIR ]]; then
 fi
 
 
-if [[ $STATUS_DEBUG -eq 0 ]]; then
+if (( $STATUS_DEBUG == 0 )); then
     # Redirect stderr + stdin in logfile
     exec &>> $STATUS_LOGFILE
 else
@@ -73,7 +73,7 @@ function status.log
 
 function status.set
 {
-    if [[ $1 > $STATUS_CURRENT ]]; then
+    if (( $1 > $STATUS_CURRENT )); then
         status.log "[status.set] $1"
         STATUS_CURRENT=$1
     fi
@@ -121,8 +121,8 @@ function status.run
     status.log "[status.run] Done $1. return code is $result"
 
     # if no status setted in test; check return code
-    if [[ $STATUS_CURRENT -eq 0 ]]; then
-        if [[ $result -eq 0 ]]; then
+    if (( $STATUS_CURRENT == 0 )); then
+        if (( $result == 0 )); then
             status.set $STATUS_OK
         else
             status.set $STATUS_FAILED
