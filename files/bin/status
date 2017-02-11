@@ -15,7 +15,7 @@ done
 # Read each file in /usr/local/status/results
 for file in $(ls /usr/local/status/results) ; do 
     R=$(cat /usr/local/status/results/$file)
-    if (( $STATUS_DEBUG -eq 1 )); then
+    if (( $STATUS_DEBUG == 1 )); then
         echo "[DEBUG] $R - ${file}"
     fi
 
@@ -35,7 +35,7 @@ for file in $(ls /usr/local/status/results) ; do
 
     if [[ ! $R =~ ^-?[0-9]+$ ]]; then
         # Discarding this result as it is not an integer
-        if (( $STATUS_DEBUG -eq 1 )); then
+        if (( $STATUS_DEBUG == 1 )); then
             echo "[ERROR] ${file} does not contain correct integer!"
         fi
         continue
