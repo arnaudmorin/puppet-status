@@ -1,0 +1,138 @@
+#!/bin/bash
+#
+# Bash lib for status probes
+#   * --debug
+#   * log in /var/log/status/<script_name>.log
+#   * status result in /usr/local/status/result <script_name>
+#
+# How to use:
+#
+# * source file at beginning of status probe
+# * write status test in a function
+# * call function with status.run <function>
+#
+# External Status
+STATUS_OK=200
+STATUS_WARNING=250
+STATUS_ERROR=300
+# Internal Status
+STATUS_FAILED=299
+STATUS_EMPTY=399  # no file (status-tcpresponder.pl)
+STATUS_EXPIRED=398 # file too old (status-tcpresponder.pl)
+
+
+STATUS_NAME=$(basename "$0" | cut -d. -f1)
+STATUS_LOGDIR='/var/log/status'
+STATUS_LOGFILE="${STATUS_LOGDIR}/${STATUS_NAME}.log"
+STATUS_PATH='/usr/local/status/'
+STATUS_RESULT_PATH="$STATUS_PATH/results"
+
+# enabled with --debug
+STATUS_DEBUG=0
+
+for arg in "$@"; do
+    shift
+    case "$arg" in
+        "--debug")  STATUS_DEBUG=1 ;;
+    esac
+done
+
+if [[ ! -d $STATUS_LOGDIR ]]; then
+    mkdir -p $STATUS_LOGDIR
+    if [[ $? -ne 0 ]]; then
+        echo "Unable to create $STATUS_LOGDIR"
+        exit 1
+    fi
+fi
+
+
+if [[ $STATUS_DEBUG -eq 0 ]]; then
+    # Redirect stderr + stdin in logfile
+    exec &>> $STATUS_LOGFILE
+else
+    #  Redirect stdout + stderr to file + stdout
+    exec &>> >(tee -a "$STATUS_LOGFILE")
+fi
+
+
+###
+# Functions
+###
+
+function status.lock
+{
+    exec 200> "/var/lock/$STATUS_NAME.lock"
+
+    flock -n 200 \
+        && return 0 \
+        || return 1
+}
+
+function status.log
+{
+    echo "[ $(date) - $STATUS_NAME ] $@" >&2
+}
+
+function status.set
+{
+    if [[ $1 > $STATUS_CURRENT ]]; then
+        status.log "[status.set] $1"
+        STATUS_CURRENT=$1
+    fi
+}
+
+function status.write
+{
+    status.log "[status.write] $STATUS_CURRENT"
+
+    if [[ ! $STATUS_CURRENT =~ ^-?[0-9]+$ ]]; then
+        status.log "[status.write] ERROR: $STATUS_CURRENT is not an integer"
+        return 1
+    fi
+
+    if [[ ! -d $STATUS_RESULT_PATH ]]; then
+        mkdir -p $STATUS_RESULT_PATH || return 1
+    fi
+
+    if [[ -n $STATUS_CURRENT ]]; then
+        echo -n "$STATUS_CURRENT" >  "${STATUS_RESULT_PATH}/${STATUS_NAME}"
+    else
+        status.log "[status.write] ERROR: STATUS_CURRENT empty"
+        return 1
+    fi
+}
+
+function status.run
+{
+    cmd=("$@")
+
+    # Init status
+    STATUS_CURRENT=0
+
+    status.lock
+    [[ $? -ne 0 ]] && status.log "[status.run] ERROR: Cannot get lock" && exit 1
+
+    if ! declare -f "$1" > /dev/null ; then
+        status.log "[status.run] ERROR: unknown function: [$1]"
+        status.set $STATUS_FAILED
+    fi
+
+    status.log "[status.run] Launch $1"
+    "${cmd[@]}"
+    result=${PIPESTATUS[0]}
+    status.log "[status.run] Done $1. return code is $result"
+
+    # if no status setted in test; check return code
+    if [[ $STATUS_CURRENT -eq 0 ]]; then
+        if [[ $result -eq 0 ]]; then
+            status.set $STATUS_OK
+        else
+            status.set $STATUS_FAILED
+        fi
+    fi
+
+    status.write
+    [[ $? -ne 0 ]] && status.log "[status.run] Cannot write status" && exit 1
+
+    exit 0
+}

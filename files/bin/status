@@ -1,0 +1,32 @@
+#!/bin/bash
+STATUS_GLOBAL=0
+STATUS_STRING=""
+
+# Read each file in /usr/local/status/results
+for file in $(ls /usr/local/status/results) ; do 
+    R=$(cat /usr/local/status/results/$file)
+    if [[ ! $R =~ ^-?[0-9]+$ ]]; then
+        # Discarding this result as it is not an integer
+        continue
+    fi
+
+    # Build GLOBAL status
+    if [[ $R > $STATUS_GLOBAL ]]; then
+        STATUS_GLOBAL=$R
+    fi
+
+    # Collect all non 200 status
+    if [[ $R -ne 200 ]] ; then
+        STATUS_STRING="$STATUS_STRING ${R}-${file}"
+    fi
+done
+
+# Final string
+if [[ $STATUS_GLOBAL -eq 200 ]]; then
+    STATUS_GLOBAL="$STATUS_GLOBAL OK"
+else
+    STATUS_GLOBAL="$STATUS_GLOBAL ERROR"
+fi
+
+# Now echo the result
+echo "$STATUS_GLOBAL $STATUS_STRING"
