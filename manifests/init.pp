@@ -39,7 +39,7 @@ class status {
   }
 
   bash::alias { 's':
-    content => 'run-parts /usr/local/status/bin/ ; /usr/local/bin/status | ccze -A',
+    content => 'run-parts /usr/local/status/bin/ ; /usr/local/bin/status --debug | ccze -A',
   }
 
   class { '::xinetd': }
