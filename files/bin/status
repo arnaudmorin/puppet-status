@@ -1,12 +1,43 @@
 #!/bin/bash
 STATUS_GLOBAL=0
 STATUS_STRING=""
+STATUS_EXPIRED=398
+# enabled with --debug
+STATUS_DEBUG=0
+
+for arg in "$@"; do
+    shift
+    case "$arg" in
+        "--debug")  STATUS_DEBUG=1 ;;
+    esac
+done
 
 # Read each file in /usr/local/status/results
 for file in $(ls /usr/local/status/results) ; do 
     R=$(cat /usr/local/status/results/$file)
+    if [[ $STATUS_DEBUG -eq 1 ]]; then
+        echo "[DEBUG] $R - ${file}"
+    fi
+
+    # Check last change date for this file
+    NOW=$(date +%s)
+    D=$(stat --printf='%Y' /usr/local/status/results/$file)
+    if [[ $(expr $NOW - $D) > 3600 ]] ; then
+        # File has not been changed since 1H
+        # Probe is not working anymore
+        STATUS_GLOBAL=$STATUS_EXPIRED
+        STATUS_STRING="$STATUS_STRING ${R}-${file}"
+        if [[ $STATUS_DEBUG -eq 1 ]]; then
+            echo "[ERROR] ${file} has not been updated last hour!"
+        fi
+        continue
+    fi
+
     if [[ ! $R =~ ^-?[0-9]+$ ]]; then
         # Discarding this result as it is not an integer
+        if [[ $STATUS_DEBUG -eq 1 ]]; then
+            echo "[ERROR] ${file} does not contain correct integer!"
+        fi
         continue
     fi
 

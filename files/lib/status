@@ -16,9 +16,7 @@ STATUS_OK=200
 STATUS_WARNING=250
 STATUS_ERROR=300
 # Internal Status
-STATUS_FAILED=299
-STATUS_EMPTY=399  # no file (status-tcpresponder.pl)
-STATUS_EXPIRED=398 # file too old (status-tcpresponder.pl)
+STATUS_FAILED=300
 
 
 STATUS_NAME=$(basename "$0" | cut -d. -f1)
