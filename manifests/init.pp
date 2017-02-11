@@ -17,6 +17,7 @@ class status {
   file { '/usr/local/status/bin':
     ensure  => directory,
     require => File['/usr/local/status'],
+    purge   => true,
   }
 
   file { '/usr/local/status/lib':
@@ -37,14 +38,19 @@ class status {
     source  => "puppet:///modules/${module_name}/bin/status",
   }
 
-  bash::alias { 'status-run':
+  bash::alias { 's':
     content => 'run-parts /usr/local/status/bin/ ; /usr/local/bin/status | ccze -A',
   }
 
   class { '::xinetd': }
 
-  xinetd::service { 'status':
+  ::xinetd::service { 'status':
     port        => '7979',
     server      => '/usr/local/bin/status',
+  }
+
+  ::etc_services { 'status/tcp':
+    port    => '7979',
+    comment => 'status service from mailops team'
   }
 }
