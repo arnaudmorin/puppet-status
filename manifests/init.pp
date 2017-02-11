@@ -21,7 +21,7 @@ class status {
 
   file { '/usr/local/status/lib':
     ensure  => directory,
-    source  => "puppet:///${module_name}/lib",
+    source  => "puppet:///modules/${module_name}/lib",
     recurse => true,
     purge   => true,
     require => File['/usr/local/status'],
@@ -34,7 +34,7 @@ class status {
 
   file { '/usr/local/bin/status':
     ensure  => file,
-    source  => "puppet:///${module_name}/bin/status",
+    source  => "puppet:///modules/${module_name}/bin/status",
   }
 
   bash::alias { 'status-run':
