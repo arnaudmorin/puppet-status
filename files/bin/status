@@ -26,7 +26,7 @@ for file in $(ls /usr/local/status/results) ; do
         # File has not been changed since 1H
         # Probe is not working anymore
         STATUS_GLOBAL=$STATUS_EXPIRED
-        STATUS_STRING="$STATUS_STRING ${R}-${file}"
+        STATUS_STRING="$STATUS_STRING 398-${file}"
         if (( $STATUS_DEBUG == 1 )); then
             echo "[ERROR] ${file} has not been updated last hour!"
         fi
