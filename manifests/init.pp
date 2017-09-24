@@ -53,4 +53,9 @@ class status {
     port    => '7979',
     comment => 'status service from mailops team'
   }
+  
+  file { '/etc/logrotate.d/status':
+    ensure  => file,
+    source  => "puppet:///modules/${module_name}/logrotate.d/status",
+  }
 }
