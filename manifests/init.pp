@@ -57,5 +57,6 @@ class status {
   file { '/etc/logrotate.d/status':
     ensure  => file,
     source  => "puppet:///modules/${module_name}/logrotate.d/status",
+    mode    => '0644',
   }
 }
