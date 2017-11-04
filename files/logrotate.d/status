@@ -1,4 +1,4 @@
-/var/log/status/* {
+/var/log/status/*.log {
         daily
         missingok
         rotate 7
